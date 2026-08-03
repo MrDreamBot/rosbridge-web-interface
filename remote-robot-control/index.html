@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>A RosBridge Web Interface for the Hiwonder ArmPi Pro</title>
+
+
+<style>
+img {height: 150px}
+body {background-color: white}
+h1 {color:blue}
+button {
+	color: green;
+	background:white;
+	border: 1px solid #000;
+	border-radius: 8px;
+	position: center;
+}
+.img-border {
+  border: 5px solid #888888;
+}
+/* Disabled button */
+button:disabled {
+  background-color: #e0e0e0;
+  color: #888888;
+  cursor: not-allowed;
+}
+.button {
+  height: 45px; 
+  width: 55px";
+  padding: 10px;
+}
+.disabled-button {
+  color: #888888;
+  height: 35px; 
+  width: 45px";
+  padding: 10px;
+  font-size: 10px;
+  border: none;
+  box-shadow: 5px 5px #888888;
+  pointer-events: none;
+}
+.field_set_1{
+  border-color: green;
+  border-style: solid;
+  border-width: thick thick thick;
+}
+.field_set_2{
+  border-color: blue;
+  border-style: solid;
+  border-width: thick thick thick;
+}
+.row {
+  display:flex;
+  flex-direction:row;
+  flex-wrap:nowrap;
+}
+.grid-container {
+  display: grid;
+  grid-template-rows: auto auto auto;
+  gap: 20px; /* Adjust spacing between rows */
+  justify-content: center; /* Centers the grid tracks horizontally */
+}
+.parent-container {
+  display: flex;         /* Activates flexbox */
+  align-items: stretch;  /* Default behavior: makes sibling heights equal */
+}
+.row-arm-control, .title-control {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 15px; /* Adjust spacing between columns */
+  /* align-items: center; */
+  justify-content: center;
+  align-items: stretch;
+}
+
+.row-mode-control {
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+  gap: 15px; /* Adjust spacing between columns */
+  align-items: center;  
+}
+
+/* Row 1 & 3: 1 column, centered */
+/* .row-1, .row-3 {
+  display: flex;
+  justify-content: center;
+} */
+.row-1, .row-3 {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 15px; /* Adjust spacing between columns */
+  align-items: center;;
+}
+.row-2 {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 15px; /* Adjust spacing between columns */
+  align-items: center;
+}
+
+.motion-img {
+  width: 45px;
+  height: 55px;
+}
+.mode-img {
+  /* width: 55px; */
+  height: 120px;
+}
+
+.outer-fieldset {
+    display: flex;
+    gap: 15px; /* Adds space between the two inner fieldsets */
+}
+
+.inner-fieldset {
+    flex: 1;       /* Forces them to share available space equally */
+    min-width: 0;  /* Crucial: Overrides default browser constraints to prevent overflow */
+    
+    /* Optional presentation styling */
+    padding: 10px;
+    box-sizing: border-box; 
+}
+label.horizontal {
+  position:relative;
+  height:120px;
+  margin-right: 10px;
+}
+label.horizontal input[type="radio"] {
+  top:1;
+  left:0;
+  position:absolute;
+}
+label.horizontal label {
+  top:0;
+  left:25px;
+  position:absolute;
+  font-size: 12px;
+  font-weight: bold; 
+  color: blue;
+}
+table {
+  border-collapse: separate; /* Required */
+  border-spacing: 20px 0px;  /* 20px space between columns, 0px between rows */
+  align-items: center;  
+}
+/* .slider-container {
+  width: 300px;
+  margin: 50px auto;
+} */
+.no-fill-slider {
+  -webkit-appearance: none; /* Removes default Chrome/Safari styling */
+  appearance: none;         /* Removes default Firefox styling */
+  /* width: 100%; */
+  height: 12px;              /* Thin track line */
+  background: #ddd;         /* Light grey background with no progress fill */
+  border-radius: 3px;
+  outline: none;
+  /* outline-color: blue; */
+
+  /* Creates 10 tick marks spaced perfectly across the 100% wide slider track */           
+  background: linear-gradient(to right, 
+        Turquoise 6px, transparent 2px
+    /* #999 6px, transparent 2px */
+  );
+  background-size: 10% 100%; /* 100% divided by 10 intervals = 10% */
+  background-repeat: repeat-x;
+}
+.center-text {
+  text-align: center;
+  align-items: center;  
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="title-control">
+  <img src="images/6dof.webp" alt="robotic arm servo components">
+  <h1>A RosBridge Web Interface for the Hiwonder ArmPi Pro</h1>
+  <img src="images/mecanumWheels.webp" alt="macanum wheels movements">
+</div>
+
+  <!-- <fieldset class="outer-fieldset"> -->
+<div class="parent-container">
+<!-- <div class="row-mode-control"> -->
+  <div class="outer-fieldset"></div>
+  <fieldset class="inner-fieldset">
+    <legend>Operating Mode Selection:</legend>
+
+      <div id="modeDiv" class="row">
+
+        <label class="horizontal">
+          <img class="mode-img" src="images/mode-robot-control.jpeg" alt="robot control mode">
+          <input type="radio" name="modeSelect" value="/robot-control" checked>
+          <label>Robot Control</label>
+        </label>
+        <label class="horizontal">
+          <img class="mode-img" src="images/mode-line-following.png" alt="line following mode">
+          <input type="radio" name="modeSelect" value="/visual_patrol">
+          <label>Line Following</label>
+        </label>
+        <label class="horizontal">
+          <img class="mode-img" src="images/mode-face-tracking.png" alt="facing tracking mode">
+          <input type="radio" name="modeSelect" value="/face_detect">
+          <label>Face Tracking</label>
+        </label>
+        <label class="horizontal">
+          <img class="mode-img" src="images/mode-tag-recognition.png" alt="apriltag recognition mode">
+          <input type="radio" name="modeSelect" value="/apriltag_detect">
+          <label>Tag Recognition</label>
+        </label>
+        <label class="horizontal">
+          <img class="mode-img" src="images/mode-colour-tracking.png" alt="colour tracking mode">
+          <input type="radio" name="modeSelect" value="/color_tracking">
+          <label>Colour Tracking</label>
+        </label>
+
+        <div>
+          <button type="button" class="button" id="activate" onclick="activateMode('Activate')">Activate</button>
+          <button type="button" class="button" id="deactivate" onclick="deactivateMode('Deactivate')">Deactivate</button>
+        </div>
+
+      </div>
+      <br>
+      <div id="targetDiv" class="center-text">
+
+        <fieldset>
+          <legend>Colour Target Selection:</legend>
+
+          <select name="colour-tracking" id="colour">
+            <option selected>red</option>
+            <option>green</option>
+            <option>blue</option>
+          </select>
+          <button type="button" class="button" onclick="executeSetTarget(getSelectedText())">Set Target Colour</button>
+        </fieldset>
+
+      </div>
+
+  </fieldset>
+
+
+  <div id="videoDiv">
+    <fieldset class="inner-fieldset">
+      <legend>Robot Camera View:</legend>
+      <br>
+      <div class="row-mode-control">
+      <img id="streamImage" class="img-border" width="320" height="240" alt="video streaming">
+      </div>
+    </fieldset>
+  </div>
+</div>
+
+
+    <div id="movementDiv">
+    <fieldset class="outer-fieldset">
+      <legend>Motion Control:</legend>
+      <fieldset class="inner-fieldset">
+        <legend>Robot:</legend>
+        <div class="grid-container">
+          <div class="row-1">
+            <div></div>
+            <button type="button" class="centered-image" onclick="executeMotionCmd(ROBOT_CMD_NW)"><img class="motion-img"  src="images/set-nw.webp" alt="move in NW direction"></button>
+            <button type="button" class="centered-image" onclick="executeMotionCmd(ROBOT_CMD_FORWARD)"><img class="motion-img"  src="images/set-up.webp" alt="move in forward direction"></button>
+            <button type="button" class="centered-image" onclick="executeMotionCmd(ROBOT_CMD_NE)"><img class="motion-img"  src="images/set-ne.webp" alt="move in NE direction"></button>
+            <div></div>
+          </div>
+
+          <div class="row-2">
+            <button type="button" class="centered-image" onclick="executeMotionCmd(ROBOT_CMD_TURN_LEFT, ROBOT_TURN_SPEED, ROBOT_TURN_DURATION)"><img class="motion-img" src="images/set-turn-l.png" alt="turn left"></button>
+            <button type="button" class="centered-image" onclick="executeMotionCmd(ROBOT_CMD_LEFT)"><img class="motion-img" src="images/set-left.webp" alt="slide left"></button>
+            <button type="button" class="centered-image" onclick="executeMotionCmd(ROBOT_CMD_STOP)"><img class="motion-img" src="images/stop.png" alt="stop"></button>
+            <button type="button" class="centered-image" onclick="executeMotionCmd(ROBOT_CMD_RIGHT)"><img class="motion-img" src="images/set-right.webp" alt="slide right"></button>
+            <button type="button" class="centered-image" onclick="executeMotionCmd(ROBOT_CMD_TURN_RIGHT, ROBOT_TURN_SPEED, ROBOT_TURN_DURATION)"><img class="motion-img" src="images/set-turn-r.png" alt="turn right"></button>
+          </div>
+
+          <div class="row-3">
+            <div></div>
+            <button type="button" class="centered-image" onclick="executeMotionCmd(ROBOT_CMD_SW)"><img class="motion-img"  src="images/set-sw.webp" alt="move in SW direction"></button>
+            <button type="button" class="centered-image" onclick="executeMotionCmd(ROBOT_CMD_BACKWARD)"><img class="motion-img" src="images/set-down.webp" alt="move backward"></button>
+            <button type="button" class="centered-image" onclick="executeMotionCmd(ROBOT_CMD_SE)"><img class="motion-img"  src="images/set-se.webp" alt="move in SE direction"></button>
+            <div></div>
+          </div>
+        </div>
+        <br><br>
+        <fieldset>
+          <legend>Robot Speed (Limited to 200 mm/s):</legend>
+          <div class="center-text">
+            <input type="range" min="0" max="200" value="100" class="slider" id="speed" list="speedmarks" onchange="updateSpeedValue('speed', 'speedValue')">
+            <datalist id="speedmarks">
+              <option value="20"></option>
+              <option value="40"></option>
+              <option value="60"></option>
+              <option value="80"></option>
+              <option value="100"></option>
+              <option value="120"></option>
+              <option value="140"></option>
+              <option value="160"></option>
+              <option value="180"></option>
+            </datalist>
+
+          <br><br>
+          <input type="text" id="speedValue" value="100" readonly>
+          </div>
+        </fieldset>
+
+      </fieldset>
+
+
+      <fieldset class="inner-fieldset">
+        <legend>Robotic Arm Servos:</legend>
+       <div class="grid-container">
+          <div class="row-arm-control">
+            <button type="button" class="button" onclick="moveArmToStartingPosition()">Reset Arm</button>
+          </div>
+          Move the sliders to the left or right to contol the movments to open/close the gripper, 
+          and other parts of the robotic arm left/right, forward/backward.<br><br>
+          The locations of the servos (number 1 through 6) are shown in the image at the top left-hand corner.
+          <div class="row-arm-control">
+            <button type="button" class="disabled-button" disabled>1. Gripper<br><br>OPEN</button>
+
+            <input type="range" min="0" max="1000" value="500" step="100" class="no-fill-slider" id="gripperPos" onclick="updateServoPos(SERVO_GRIPPER)" />
+
+            <button type="button" class="disabled-button" disabled>1. Gripper<br><br>CLOSE</button>
+          </div>
+
+          <div class="row-arm-control">
+            <button type="button" class="disabled-button" disabled>2. Wrist Rotate<br><br>LEFT</button>
+
+            <input type="range" min="0" max="1000" value="500" class="no-fill-slider" id="wristRotPos" onclick="updateServoPos(SERVO_WRIST_ROTATION)"  />
+
+            <button type="button" class="disabled-button" disabled>2. Wrist Rotate<br><br>RIGHT</button>
+          </div>
+
+          <div class="row-arm-control">
+            <button type="button" class="disabled-button" disabled>3. Wrist<br><br>FORWARD</button>
+
+            <input type="range" min="0" max="1000" value="500" class="no-fill-slider" id="wristPos" onclick="updateServoPos(SERVO_WRIST)" />
+
+            <button type="button" class="disabled-button" disabled>3. Wrist<br><br>BACKWARD</button>
+          </div>
+
+          <div class="row-arm-control">
+            <button type="button" class="disabled-button" disabled>4. Elbow<br><br>FORWARD</button>
+
+            <input type="range" min="0" max="1000" value="500" class="no-fill-slider" id="elbowPos" onclick="updateServoPos(SERVO_ELBOW)" />
+
+            <button type="button" class="disabled-button" disabled>4. Elbow<br><br>BACKWARD</button>
+          </div>
+
+          <div class="row-arm-control">
+            <button type="button" class="disabled-button" disabled>5. Shoulder<br><br>FORWARD</button>
+
+            <input type="range" min="0" max="1000" value="500" class="no-fill-slider" id="shoulderPos" onclick="updateServoPos(SERVO_SHOULDER)" />
+
+            <button type="button" class="disabled-button" disabled>5. Shoulder<br><br>BACKWARD</button>
+          </div>
+
+          <div class="row-arm-control">
+            <button type="button" class="disabled-button" disabled>6. Base<br><br>LEFT</button>
+
+            <input type="range" min="0" max="1000" value="500" class="no-fill-slider" id="basePos" onclick="updateServoPos(SERVO_BASE)" />
+
+            <button type="button" lass="disabled-button" disabled>6. Base<br><br>RIGHT</button>
+          </div>
+       </div>
+      </fieldset>
+    </fieldset>
+
+  </div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/eventemitter2@6.4.9/lib/eventemitter2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/roslib@1/build/roslib.min.js"></script>
+<script src="./config.js"></script>
+<script>
+
+  // read config
+  const serverIP = window.APP_CONFIG?.ARMPI_PRO_IP;
+  if (serverIP == undefined) {
+    alert("Missing config.js or ARMPI_PRO_IP is undefined.");
+    throw new Error("Application stopped");
+  }
+
+  // Initialise the web interface
+  //
+  // hide movement division
+  const movementDiv = document.getElementById("movementDiv");
+  hideDiv(movementDiv);
+  hideDiv(targetDiv);
+  hideDiv(videoDiv);
+
+
+  const modeDiv = document.getElementById("modeDiv");
+  // disableDiv(modeDiv);
+
+  // aysnc sleep function (used with async/await)
+  const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+ 
+
+  // ROS server info
+  const wsPort = "9090";
+  const wsURL = "ws://" + serverIP + ":" + wsPort;
+  const streamURL = "http://" + serverIP + ":8080/stream?topic=/visual_processing/image_result";
+  document.getElementById("streamImage").src = streamURL;
+  const dropdown = document.getElementById("colour");
+
+  let currentMode = currentButton = null;
+  let prevMode = prevButton = null;
+
+  const activateButton = document.getElementById("activate");
+  const deactivateButton = document.getElementById("deactivate");
+  deactivateButton.disabled = true;
+
+  const OP_ENTER = "enter";
+  const OP_EXIT = "exit";
+
+  let rrsConnected = false;
+  // console.log('ws url: ' + wsURL);
+  let rrsConnection = null;
+
+  // Makes websocket connection
+  rrsConnectWS();
+
+  // ******************************
+  //
+  // Sets up robot chassis movement control topic
+  const cmdTopic = new ROSLIB.Topic({
+    ros : rrsConnection,
+    name : '/chassis_control/set_velocity',
+    messageType : '/chassis_control/chassis_control/set_velocity'
+  });
+
+  const ROBOT_CMD_DURATION = 2500;  // 2.5 seconds
+  const ROBOT_TURN_DURATION = ROBOT_CMD_DURATION / 2;
+  const ROBOT_DEFAULT_SPEED = 100;
+  const ROBOT_TURN_SPEED = ROBOT_DEFAULT_SPEED / 2;
+  const ROBOT_MMINIMUN_SPEED = 0;
+  const ROBOT_MAXIMU_SPEED = 200;
+
+  
+  let robotSpeed = 100;
+
+  // Robot motion control ----------------------
+  // Defines basic movements
+  const ROBOT_CMD_TURN_LEFT = new ROSLIB.Message({
+    velocity : 0,
+    direction : 90,
+    angular: 0.25
+  });
+  const ROBOT_CMD_LEFT = new ROSLIB.Message({
+    velocity : robotSpeed,
+    direction : 180,
+    angular: 0
+  });
+  const ROBOT_CMD_STOP = new ROSLIB.Message({
+    velocity : 0,
+    direction : 0,
+    angular: 0
+  });
+  const ROBOT_CMD_TURN_RIGHT = new ROSLIB.Message({
+    velocity : 0,
+    direction : 90,
+    angular: -0.25
+  });
+  const ROBOT_CMD_RIGHT = new ROSLIB.Message({
+    velocity : robotSpeed,
+    direction : 360,
+    angular: 0
+  });
+  const ROBOT_CMD_FORWARD = new ROSLIB.Message({
+    velocity : robotSpeed,
+    direction : 90,
+    angular: 0
+  });
+  const ROBOT_CMD_BACKWARD = new ROSLIB.Message({
+    velocity : robotSpeed,
+    direction : 270,
+    angular: 0
+  });
+    const ROBOT_CMD_NE = new ROSLIB.Message({
+    velocity : robotSpeed,
+    direction : 45,
+    angular: 0
+  });
+    const ROBOT_CMD_NW = new ROSLIB.Message({
+    velocity : robotSpeed,
+    direction : 135,
+    angular: 0
+  });
+    const ROBOT_CMD_SE = new ROSLIB.Message({
+    velocity : robotSpeed,
+    direction : 315,
+    angular: 0
+  });
+    const ROBOT_CMD_SW = new ROSLIB.Message({
+    velocity : robotSpeed,
+    direction : 225,
+    angular: 0
+  });
+
+  // Sets up obotic arm servo control topics ----------------------
+  //
+  // Controls up to all 6 servos at once
+  const multipleServoTopic= new ROSLIB.Topic({
+    ros : rrsConnection,
+    name : '/servo_controllers/port_id_1/multi_id_pos_dur',
+    messageType : '/hiwonder_servo_msgs/MultiRawIdPosDur'
+  });
+
+  // Controls a single servo
+  const singleServoTopic= new ROSLIB.Topic({
+    ros : rrsConnection,
+    name : '/servo_controllers/port_id_1/id_pos_dur',
+    messageType : '/hiwonder_servo_msgs/RawIdPosDur'
+  });
+
+  // gets the states of up to 6 servos
+  // const stateListener = new ROSLIB.Topic({
+  //   ros : rrsConnection,
+  //   name : '/servo_controllers/port_id_1/servo_states',
+  //   messageType : '/hiwonder_servo_msgs/ServoStateList'
+  // });
+
+  // stateListener.subscribe(function(msg) {
+  //   console.log('Received servo states on ' + stateListener.name + ': ' + msg.data);
+  //   // console.log('Received servo states on ' + msg.data);
+  //   // stateListener.unsubscribe();
+  // });
+
+  // Define servo names
+  const SERVO_GRIPPER = 1;
+  const SERVO_WRIST_ROTATION = 2;
+  const SERVO_WRIST = 3;
+  const SERVO_ELBOW = 4;
+  const SERVO_SHOULDER = 5;
+  const SERVO_BASE = 6;
+
+  // Servo range 1 to 1000
+  // Defines limits
+  const SERVO_MIN_POSITION = 50;
+  const SERVO_MAX_POSITION = 950;
+  const SERVO_ABSOLUTE_MAX_POSITION = 1000;
+
+
+  // Defines the startup position of the robotic arm
+  const ARM_STARTING_POSITION = {id_pos_dur_list: [
+    { id: SERVO_GRIPPER, position: 200, duration: 1800 },
+    { id: SERVO_WRIST_ROTATION, position: 500, duration: 1800 },
+    { id: SERVO_WRIST, position: 330, duration: 1800 },
+    { id: SERVO_ELBOW, position: 880, duration: 1800 },
+    { id: SERVO_SHOULDER, position: 680, duration: 1800 },
+    { id: SERVO_BASE, position: 500, duration: 1800 }
+  ]};
+
+  // First element in each array is unused
+  const servoOrientation = [0, 1, 1, 1, -1, 1, -1];
+  const servoRangeId = ["", "gripperPos", "wristRotPos", "wristPos", "elbowPos", "shoulderPos", "basePos"];
+  const DEFAULT_SERVO_DURATION = 600;
+
+  // functions to control the web components
+  //
+
+  // Controls division functions
+  function hideDiv(divId) {
+      divId.style.display = "none";
+  }
+
+  function unhideDiv(divId) {
+      divId.style.display = "";
+  }
+
+  function disableDiv(divId) {
+    divId.style.pointerEvents = "none";
+    divId.style.opacity = "0.";
+  }
+
+  function enableDiv(divId) {
+    divId.style.pointerEvents = "auto";
+    divId.style.opacity = "1.0";
+  }
+
+  function enableButton(button) {
+    button.disabled = false;
+  }
+
+  function disableButton(button) {
+    button.disabled = true;
+  }
+
+  // Retrieves colour target from dropdown box
+  function getSelectedText() {
+    const color = dropdown.options[dropdown.selectedIndex].text;
+    // alert(color);
+    return color;
+  }
+
+
+  // ***********************
+  // Sets up the parameters used to interact with a ROS 1 service
+  // rosservice call /${currentMode}/enter "{}"
+  function setupActivate(op) {
+    const svcObj = {
+    ros : rrsConnection,
+    name : currentMode + "/" + op, 
+    serviceType : 'std_srvs/Trigger' };
+    // ********************
+    // ---
+    // bool success
+    // string message  
+    // ********************
+    const reqObj = {};
+    // executeSvc(svcObj, reqObj);
+    // alert(`setupActivate: ${svcObj.name} ${JSON.stringify(reqObj)}`);
+    return {svcObj, reqObj};
+  }
+
+  // Sets up the parameters used to interact with a ROS 1 servicee
+  // rosservice call /${currentMode}/set_running "data: true/false"
+  // setState: true or false
+  function setupSetRunning(setState) {
+    const svcObj = {
+    ros : rrsConnection,
+    name : currentMode + "/set_running",
+    serviceType : 'std_srvs/SetBool'};
+    // ********************
+    // bool data
+    // ---
+    // bool success
+    // string message
+    // ********************
+    const reqObj = {data: setState};
+    // executeSvc(svcObj, reqObj);
+    // alert(`setupSetRunning: ${svcObj.name} ${JSON.stringify(reqObj)}`);
+    return {svcObj, reqObj};
+  }
+
+  // Executes service call to interact with a ROS 1 servicee
+  // rosservice call /${currentMode}/set_target "data: colour"
+  // colour: red, green, blue or yellow
+  function executeSetTarget(targetColour) {
+    const svcObj = {
+    ros : rrsConnection,
+    name : currentMode + "/set_target",
+    serviceType : currentMode + "/SetTarget"};
+    // ********************
+    // string data
+    // ---
+    // bool success
+    // string message
+    // ********************
+    const reqObj = {data: targetColour};
+    executeSequentialCalls(svcObj, reqObj);
+  }
+
+  // Main function called from the web interface
+  // Configure the operating mode selected by the user using the web interface.
+  // Each mode performs a different function:
+  // Robot Control, Line Following, Face Tracking, Tag Recognition, and Colour Tracking
+  //
+  function activateMode(button) {
+    // Retrieve selected dropdown text
+    const mode = document.querySelector('input[name="modeSelect"]:checked');
+    const value = mode ? mode.value : null;
+    console.log(value); 
+
+    disableButton(activateButton);
+    enableButton(deactivateButton);
+
+    // alert("mode="+value+ "; Button=" + button + ", wsURL=" + wsURL + ", streamURL=" + streamURL);
+
+    currentMode = value;
+    currentButton = button;
+
+    if (value == '/robot-control') {
+
+      unhideDiv(movementDiv)
+
+      // move robotic arm to startup position
+      // moveArmToStartingPosition();
+
+      // activate apriltag_detect to enable camera with the least side-effect
+      currentMode = "/apriltag_detect";
+    }
+
+    unhideDiv(videoDiv);
+    if (currentMode == "/visual_patrol" || currentMode == "/color_tracking") {
+      unhideDiv(targetDiv);
+    }
+
+    // Executes 2 service calls sequentially
+    const { svcObj: svc1, reqObj: req1 } = setupActivate(OP_ENTER);
+    // alert(`activateMode: ${JSON.stringify(svc1)} ${JSON.stringify(req1)}`);
+    const { svcObj: svc2, reqObj: req2 } = setupSetRunning(true);
+
+    // alert(`activateMode: ${JSON.stringify(svc1)} ${JSON.stringify(req1)}`);
+    executeSequentialCalls(svc1, req1 , svc2, req2);
+
+    if (value == '/robot-control') {
+      currentMode = value;
+    }
+
+  }
+
+  // Deactivates the running operation
+  function deactivateMode(button) {
+    enableButton(activateButton);
+    disableButton(deactivateButton);
+
+    // Remember to exit apriltag_detect
+    if (currentMode == '/robot-control') {
+      hideDiv(movementDiv);
+      currentMode = "/apriltag_detect";
+    } 
+
+    // alert("deactivate=" + currentMode + "; Button=" + button);
+
+    // Execute 2 service calls sequentially
+    const { svcObj: svc1, reqObj: req1 } = setupSetRunning(false);  
+    const { svcObj: svc2, reqObj: req2 } = setupActivate(OP_EXIT);  
+
+    // execute services sequentially
+    executeSequentialCalls(svc1, req1 , svc2, req2);
+
+    hideDiv(videoDiv);
+    if (currentMode == "/visual_patrol" || currentMode == "/color_tracking") {
+      hideDiv(targetDiv);
+    }
+
+    currentMode = currentButton = null;
+  }
+
+  // Wraps service call in a Promise
+  function callRosService(serviceClient, request) {
+      return new Promise((resolve, reject) => {
+          serviceClient.callService(request, 
+              (result) => {
+                  resolve(result); // Service succeeded
+              }, 
+              (error) => {
+                  reject(error);   // Service failed
+              }
+          );
+      });
+  }
+
+  // Uses Async/Await to implement sequential calls ie, 2nd call preoceeds only after the first has completed
+  async function executeSequentialCalls(svc1, req1, svc2 = null, req2 = null) {
+      try {
+          console.log("Starting first service call...");
+          // alert(`executeSequentialCalls: ${JSON.stringify(svc1)} ${JSON.stringify(req1)}`);
+          
+          // First service call
+          const svcClient1 = new ROSLIB.Service(svc1);
+          const result1 = await callRosService(svcClient1, req1);
+          console.log(svc1.name + " call finished with result:", result1);
+
+          // Second service call (only runs after the first one finishes and not null)
+          if (svc2 != null) {
+            console.log("Starting second service call...");
+            const svcClient2 = new ROSLIB.Service(svc2);
+            const result2 = await callRosService(svcClient2, req2);
+            console.log(svc2.name + " call finished with result:", result2);
+          }
+
+      } catch (error) {
+          console.error("A service call failed:", error);
+      }
+  }
+
+
+// Matches the textbox value to the slider selection
+// ----------------------------
+  function updateSpeedValue(rangeId, textId) {
+    const value = +document.getElementById(rangeId).value;
+    document.getElementById(textId).value = value;
+    robotSpeed = value;
+  }
+
+  
+ // ---------------------------
+ // Async/Await functions for robot movement
+ //
+  async function executeMotionCmd(msg, speed = ROBOT_DEFAULT_SPEED, duration = ROBOT_CMD_DURATION) {
+    cmdTopic.publish(msg);
+    await sleep(duration);
+    cmdTopic.publish(ROBOT_CMD_STOP);
+  }
+
+ // ---------------------------
+ // Robotic arm control functions
+ //
+  // Executes servo command for one servo
+  function executeSingleServoCmd(servoId, servoPos, servoDur) {
+    const cmd = new ROSLIB.Message({
+      id : servoId,
+      position : servoPos,
+      duration: servoDur
+    });
+    singleServoTopic.publish(cmd);
+    // console.log(servoId + ":" + servoPos +  ":" + servoDur + " executed");
+  }
+
+  // Move servo to position specified by the corresponding slider conntrol
+  function updateServoPos(servoId, servoDur = DEFAULT_SERVO_DURATION) {
+    const rangeId = servoRangeId[servoId];
+    let pos = +document.getElementById(rangeId).value;
+    if (servoOrientation[servoId] < 0) {
+      pos = SERVO_ABSOLUTE_MAX_POSITION - pos;
+      console.log(rangeId + "reverses orientation: " + pos);
+    }
+
+    // Makes sure pos within limits
+    if (pos < SERVO_MIN_POSITION) {
+      pos = SERVO_MIN_POSITION;
+    } else if (pos > SERVO_MAX_POSITION) {
+      pos = SERVO_MAX_POSITION;
+    }
+
+    console.log(rangeId + "=" + pos);
+    executeSingleServoCmd(servoId, pos, servoDur);
+  }
+
+  // Moves robotic arm to a predefined starting position
+  function moveArmToStartingPosition() {
+    // console.log('Setting robotic arm startring poistion: ' + JSON.stringify(ARM_STARTING_POSITION));
+    const cmd = new ROSLIB.Message(ARM_STARTING_POSITION);
+    multipleServoTopic.publish(cmd);
+  }
+
+ // ---------------------------
+ // RosBridge support utilities for Remote Robot Services
+ //
+ // If connection is lost, just refresh the web page to reconnect
+
+  // Connects to ROS websocket
+  function rrsConnectWS() {
+    rrsConnection = new ROSLIB.Ros({
+      url : wsURL
+    });
+
+    rrsConnection.on('connection', function() {
+      console.log('Connected to websocket server.');
+      rrsConnected = true;
+      alert("Websocked connected.");
+      // executeService();
+    });
+
+    rrsConnection.on('error', function(error) {
+      console.log('Error connecting to websocket server: ', error);
+      rrsConnected = false;
+      // alert("Websockedt failed to connect: "+ error.message);
+      // there is no error message in notification
+      alert("Websockedt failed to connect.");
+    });
+
+    rrsConnection.on('close', function() {
+      console.log('Connection to websocket server closed.');
+      rrsConnected = false;
+      alert("Websockedt closed.");
+    });
+  }
+
+  // Checks if connected to the ROS websocket
+  function isRrsConnected() {
+    return rrsConnected;
+  }
+
+
+</script>
+</body>
+</html>

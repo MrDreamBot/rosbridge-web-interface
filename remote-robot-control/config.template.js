@@ -1,0 +1,3 @@
+window.APP_CONFIG = {
+  ARMPI_PRO_IP: "$ARMPI_PRO_IP"
+};
