@@ -1,6 +1,9 @@
 # A RosBridge Web Interface for the Hiwonder ArmPi Pro
 I built a Rosbridge web interface to interact with the robot's ROS (Robot Operating System) applications(services) and to control the robot as a way to learn ROS. This is my journey. The following video shows my web interface and its capabilities.
 
+Here is my Rosbridge Web Interface Demo video:
+[![My Rosbridge Web Interface Demo video](https://img.youtube.com/vi/iRmdPabIhlk/default.jpg)](https://youtu.be/iRmdPabIhlk)
+
 ## 1. Introduction
 The Hiwonder ArmPi Pro is a ROS 6-degree-of-freedom (6 DOF) robotic arm with a mecanum 4WD, a HD camera and a Raspberry Pi as its brain. It can slide left/right, move diagonally in addition to the movements possible with a normal 4WD robotic vehicle.
 
